@@ -1,6 +1,6 @@
 "use client";
 
-import { BrainCircuit } from "lucide-react";
+import { BrainCircuit, Loader2 } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,15 +14,15 @@ export default function AuthenticationPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (user) {
+    if (!loading && user) {
       router.push("/dashboard");
     }
-  }, [user, router]);
+  }, [user, loading, router]);
 
   if (loading || user) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
-        <BrainCircuit className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
