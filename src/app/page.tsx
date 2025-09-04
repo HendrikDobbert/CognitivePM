@@ -14,14 +14,12 @@ export default function AuthenticationPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // If the user is authenticated, redirect to the dashboard.
     if (user) {
       router.push("/dashboard");
     }
   }, [user, router]);
 
   // While the auth state is loading, or if the user is found, show a spinner.
-  // This covers the brief moment after login before the redirect happens.
   if (loading || user) {
     return (
       <div className="flex h-screen w-full items-center justify-center">

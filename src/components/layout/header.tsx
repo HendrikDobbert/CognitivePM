@@ -4,7 +4,6 @@ import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,7 +23,7 @@ export function Header() {
 
   const handleLogout = async () => {
     await signOut(auth);
-    router.push("/");
+    // The useAuth hook will handle session deletion and the page component will redirect.
   };
 
   return (
