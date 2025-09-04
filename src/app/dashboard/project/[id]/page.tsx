@@ -32,8 +32,11 @@ async function getProjectDetails(id: string): Promise<ProjectDetails | null> {
          { id: 3, text: "Integrate payment gateway", completed: false },
       ];
 
+      const projectData = projectDoc.data() as Omit<ProjectDetails, "tasks">;
       return {
-        ...(projectDoc.data() as Omit<ProjectDetails, "tasks">),
+        name: projectData.name,
+        description: projectData.description,
+        status: projectData.status,
         tasks: mockTasks,
       };
     } else {
