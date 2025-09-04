@@ -70,7 +70,7 @@ export default async function DashboardPage() {
           <MyTasks initialTasks={initialTasks} />
         </div>
         <div className="space-y-6">
-          <RiskPrediction />
+          <RiskPrediction tasks={initialTasks} />
           <AutomatedSummaries />
         </div>
       </div>
