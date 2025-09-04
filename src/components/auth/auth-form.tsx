@@ -15,7 +15,7 @@ import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { createOrUpdateUser } from "@/services/user-service";
 
@@ -48,8 +48,7 @@ export function AuthForm({ mode }: AuthFormProps) {
     try {
       if (mode === "register") {
         const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
-        // Temporarily disabled to fix permissions issue
-        // await createOrUpdateUser(userCredential.user);
+        await createOrUpdateUser(userCredential.user);
       } else {
         await signInWithEmailAndPassword(auth, values.email, values.password);
       }
@@ -70,8 +69,7 @@ export function AuthForm({ mode }: AuthFormProps) {
     try {
       const provider = new GoogleAuthProvider();
       const userCredential = await signInWithPopup(auth, provider);
-      // Temporarily disabled to fix permissions issue
-      // await createOrUpdateUser(userCredential.user);
+      await createOrUpdateUser(userCredential.user);
     } catch (error: any) {
       if (error.code !== 'auth/popup-closed-by-user') {
         toast({
