@@ -70,6 +70,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       const provider = new GoogleAuthProvider();
       const userCredential = await signInWithPopup(auth, provider);
       await createOrUpdateUser(userCredential.user);
+      // The useAuth hook will handle the redirect
     } catch (error: any) {
       if (error.code !== 'auth/popup-closed-by-user') {
         toast({

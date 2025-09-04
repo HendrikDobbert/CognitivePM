@@ -31,6 +31,7 @@ export function useAuth() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setLoading(true);
       if (user) {
         try {
           const idToken = await user.getIdToken(true);
@@ -38,6 +39,8 @@ export function useAuth() {
           setUser(user);
         } catch (e) {
           console.error("useAuth: Error during session creation or getting idToken:", e);
+          // If session creation fails, sign the user out on the client to avoid an inconsistent state
+          await auth.signOut(); 
           setUser(null);
         }
       } else {
