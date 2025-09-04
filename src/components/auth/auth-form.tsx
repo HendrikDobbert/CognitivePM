@@ -52,15 +52,14 @@ export function AuthForm({ mode }: AuthFormProps) {
       } else {
         await signInWithEmailAndPassword(auth, values.email, values.password);
       }
-      // The useAuth hook will handle the redirect
+      // The useAuth hook will handle the redirect, so we don't need to setLoading(false) here.
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Authentication failed",
         description: error.message,
       });
-    } finally {
-      setLoading(false);
+      setLoading(false); // Only set loading to false on error
     }
   };
 
@@ -79,8 +78,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           description: error.message,
         });
       }
-    } finally {
-      setLoading(false);
+      setLoading(false); // Only set loading to false on error
     }
   };
 
