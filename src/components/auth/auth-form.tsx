@@ -9,6 +9,7 @@ import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
+  UserCredential,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { createOrUpdateUser } from "@/services/user-service";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
@@ -41,15 +43,22 @@ export function AuthForm({ mode }: AuthFormProps) {
     },
   });
 
+  const handleAuthSuccess = async (userCredential: UserCredential) => {
+    if (mode === 'register' || userCredential.user.metadata.creationTime === userCredential.user.metadata.lastSignInTime) {
+      await createOrUpdateUser(userCredential.user);
+    }
+    // The useAuth hook will handle the redirect
+  };
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setLoading(true);
     try {
       if (mode === "register") {
-        await createUserWithEmailAndPassword(auth, values.email, values.password);
+        const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+        await handleAuthSuccess(userCredential);
       } else {
         await signInWithEmailAndPassword(auth, values.email, values.password);
       }
-      // The useAuth hook will handle the redirect
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -65,19 +74,18 @@ export function AuthForm({ mode }: AuthFormProps) {
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      // The useAuth hook will handle the redirect
+      const userCredential = await signInWithPopup(auth, provider);
+      await handleAuthSuccess(userCredential);
     } catch (error: any) {
-      // Don't show a toast if the user closes the popup
       if (error.code !== 'auth/popup-closed-by-user') {
-          toast({
-            variant: "destructive",
-            title: "Google Sign-In failed",
-            description: error.message,
-          });
+        toast({
+          variant: "destructive",
+          title: "Google Sign-In failed",
+          description: error.message,
+        });
       }
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
