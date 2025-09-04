@@ -1,17 +1,14 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import {
-  collection,
-  addDoc,
   updateDoc,
   deleteDoc,
   doc,
-  serverTimestamp,
 } from "firebase/firestore";
-import { db, auth } from "@/lib/firebase";
-import { useAuth } from "@/hooks/use-auth";
+import { db } from "@/lib/firebase";
 import dynamic from "next/dynamic";
+import { format } from "date-fns";
 
 import {
   Card,
@@ -22,9 +19,9 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Trash2, ListTodo, Sparkles } from "lucide-react";
+import { ListTodo, Sparkles, Trash2, Calendar } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 const NewTaskDialog = dynamic(
   () => import("./new-task-dialog").then((mod) => mod.NewTaskDialog),
@@ -37,11 +34,12 @@ const NewTaskDialog = dynamic(
   }
 );
 
-
 interface Task {
   id: string;
-  text: string;
+  title: string;
+  description?: string;
   completed: boolean;
+  dueDate?: string;
 }
 
 interface MyTasksProps {
@@ -49,35 +47,7 @@ interface MyTasksProps {
 }
 
 export function MyTasks({ initialTasks }: MyTasksProps) {
-  const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
-  const [newTaskText, setNewTaskText] = useState("");
-
-  const handleAddTask = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newTaskText.trim() === "" || !user) return;
-    
-    // Optimistic UI update
-    const tempId = `temp-${Date.now()}`;
-    const newTask: Task = { id: tempId, text: newTaskText, completed: false };
-    setTasks([newTask, ...tasks]);
-    setNewTaskText("");
-
-    try {
-      const docRef = await addDoc(collection(db, "tasks"), {
-        text: newTaskText,
-        completed: false,
-        userId: user.uid,
-        createdAt: serverTimestamp(),
-      });
-      // Replace temporary task with the one from Firestore
-      setTasks(currentTasks => currentTasks.map(t => t.id === tempId ? { ...newTask, id: docRef.id } : t));
-    } catch (error) {
-      console.error("Error adding task: ", error);
-      // Revert optimistic update on error
-      setTasks(currentTasks => currentTasks.filter(t => t.id !== tempId));
-    }
-  };
 
   const handleToggleTask = async (id: string, completed: boolean) => {
     // Optimistic UI update
@@ -107,6 +77,12 @@ export function MyTasks({ initialTasks }: MyTasksProps) {
     }
   };
 
+  // This is a client component, so we need to update the tasks state
+  // if the initialTasks prop changes.
+  useState(() => {
+    setTasks(initialTasks);
+  });
+
   const completedTasks = tasks.filter((task) => task.completed).length;
   const pendingTasks = tasks.length - completedTasks;
 
@@ -118,52 +94,53 @@ export function MyTasks({ initialTasks }: MyTasksProps) {
             <ListTodo className="h-6 w-6" />
             My Tasks
           </div>
-          <div className="flex items-center gap-2">
-            <NewTaskDialog>
-               <Button variant="outline" size="sm">
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Smart Create
+          <NewTaskDialog>
+              <Button variant="outline" size="sm">
+                <Sparkles className="mr-2 h-4 w-4" />
+                Smart Create
               </Button>
-            </NewTaskDialog>
-          </div>
+          </NewTaskDialog>
         </CardTitle>
         <CardDescription>
           You have {pendingTasks} pending and {completedTasks} completed tasks.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
-        <form onSubmit={handleAddTask} className="flex gap-2">
-          <Input
-            value={newTaskText}
-            onChange={(e) => setNewTaskText(e.target.value)}
-            placeholder="Add a new task..."
-            disabled={!user}
-          />
-          <Button type="submit" size="icon" disabled={!user}>
-            <Plus className="h-4 w-4" />
-          </Button>
-        </form>
         <ScrollArea className="flex-1 pr-4 -mr-4">
           {tasks.length > 0 ? (
             <div className="space-y-3">
               {tasks.map((task) => (
                 <div
                   key={task.id}
-                  className="flex items-center gap-3 p-2 rounded-md transition-colors hover:bg-muted/50"
+                  className="flex items-start gap-3 p-3 rounded-md transition-colors border hover:bg-muted/50"
                 >
                   <Checkbox
                     id={`task-${task.id}`}
                     checked={task.completed}
                     onCheckedChange={() => handleToggleTask(task.id, task.completed)}
+                    className="mt-1"
                   />
-                  <label
-                    htmlFor={`task-${task.id}`}
-                    className={`flex-1 text-sm ${
-                      task.completed ? "text-muted-foreground line-through" : ""
-                    }`}
-                  >
-                    {task.text}
-                  </label>
+                  <div className="flex-1 grid gap-1">
+                    <label
+                      htmlFor={`task-${task.id}`}
+                      className={`font-medium ${
+                        task.completed ? "text-muted-foreground line-through" : ""
+                      }`}
+                    >
+                      {task.title}
+                    </label>
+                    {task.description && (
+                         <p className={`text-sm text-muted-foreground ${
+                            task.completed ? "line-through" : ""
+                          }`}>{task.description}</p>
+                    )}
+                    {task.dueDate && (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1">
+                            <Calendar className="h-4 w-4" />
+                            <span>{format(new Date(task.dueDate), "PPP")}</span>
+                        </div>
+                    )}
+                  </div>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -177,8 +154,8 @@ export function MyTasks({ initialTasks }: MyTasksProps) {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8">
-                <p className="font-medium">All tasks completed!</p>
-                <p className="text-sm">Add a new task to get started.</p>
+                <p className="font-medium">No tasks yet!</p>
+                <p className="text-sm">Click "Smart Create" to add a new task.</p>
             </div>
           )}
         </ScrollArea>
