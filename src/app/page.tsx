@@ -14,13 +14,14 @@ export default function AuthenticationPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && user) {
+    // If the user is authenticated, redirect to the dashboard.
+    if (user) {
       router.push("/dashboard");
     }
-  }, [user, loading, router]);
+  }, [user, router]);
 
-  // Only show a loading spinner if we are in a loading state AND a user is already found.
-  // This prevents the flicker on the initial load for non-authenticated users.
+  // While the auth state is loading, or if the user is found, show a spinner.
+  // This covers the brief moment after login before the redirect happens.
   if (loading || user) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
@@ -28,8 +29,8 @@ export default function AuthenticationPage() {
       </div>
     );
   }
-
-  // Render the login form immediately by default.
+  
+  // If not loading and no user is found, render the login form.
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4">
       <div className="flex items-center gap-2 mb-6">
