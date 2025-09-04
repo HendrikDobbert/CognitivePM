@@ -43,22 +43,17 @@ export function AuthForm({ mode }: AuthFormProps) {
     },
   });
 
-  const handleAuthSuccess = async (userCredential: UserCredential) => {
-    if (mode === 'register' || userCredential.user.metadata.creationTime === userCredential.user.metadata.lastSignInTime) {
-      await createOrUpdateUser(userCredential.user);
-    }
-    // The useAuth hook will handle the redirect
-  };
-
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setLoading(true);
     try {
       if (mode === "register") {
         const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
-        await handleAuthSuccess(userCredential);
+        // Temporarily disabled to fix permissions issue
+        // await createOrUpdateUser(userCredential.user);
       } else {
         await signInWithEmailAndPassword(auth, values.email, values.password);
       }
+      // The useAuth hook will handle the redirect
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -75,7 +70,8 @@ export function AuthForm({ mode }: AuthFormProps) {
     try {
       const provider = new GoogleAuthProvider();
       const userCredential = await signInWithPopup(auth, provider);
-      await handleAuthSuccess(userCredential);
+      // Temporarily disabled to fix permissions issue
+      // await createOrUpdateUser(userCredential.user);
     } catch (error: any) {
       if (error.code !== 'auth/popup-closed-by-user') {
         toast({
