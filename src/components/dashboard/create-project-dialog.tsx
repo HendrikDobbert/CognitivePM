@@ -4,8 +4,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 
@@ -73,11 +71,19 @@ export function CreateProjectDialog() {
     }
     setLoading(true);
     try {
-      await addDoc(collection(db, "projects"), {
-        ...values,
-        userId: user.uid,
-        createdAt: serverTimestamp(),
+      const response = await fetch('/api/projects', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create project');
+      }
+
       toast({
         title: "Project created successfully!",
       });
@@ -85,10 +91,11 @@ export function CreateProjectDialog() {
       setOpen(false);
       router.refresh(); // Refresh the page to show the new project
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
       toast({
         variant: "destructive",
         title: "Failed to create project",
-        description: "Please try again later.",
+        description: errorMessage,
       });
     } finally {
       setLoading(false);
