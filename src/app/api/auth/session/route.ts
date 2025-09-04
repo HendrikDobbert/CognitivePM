@@ -5,10 +5,12 @@ import { type NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   console.log("API /api/auth/session POST: Received request.");
-  const { idToken } = await request.json();
+  const body = await request.json();
+  const { idToken } = body;
+
 
   if (!idToken) {
-    console.error("API /api/auth/session POST: idToken is missing.");
+    console.error("API /api/auth/session POST: idToken is missing from request body.", body);
     return NextResponse.json(
       { error: "idToken is required" },
       { status: 400 }
@@ -17,6 +19,8 @@ export async function POST(request: NextRequest) {
 
   // Set session expiration to 5 days.
   const expiresIn = 60 * 60 * 24 * 5 * 1000;
+  console.log("API /api/auth/session POST: idToken received, length:", idToken.length);
+
 
   try {
     console.log("API /api/auth/session POST: Creating session cookie...");
@@ -42,7 +46,12 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE() {
   console.log("API /api/auth/session DELETE: Received request to delete cookie.");
-  cookies().delete("session");
-  console.log("API /api/auth/session DELETE: Session cookie deleted.");
-  return NextResponse.json({ success: true });
+  try {
+    cookies().delete("session");
+    console.log("API /api/auth/session DELETE: Session cookie deleted successfully.");
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("API /api/auth/session DELETE: Error deleting cookie:", error);
+    return NextResponse.json({ success: false, error: "Failed to delete session" }, { status: 500 });
+  }
 }

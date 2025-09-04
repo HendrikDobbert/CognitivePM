@@ -44,14 +44,17 @@ export function AuthForm({ mode }: AuthFormProps) {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setLoading(true);
+    console.log(`AuthForm: Submitting ${mode} form...`);
     try {
       if (mode === "register") {
         await createUserWithEmailAndPassword(auth, values.email, values.password);
       } else {
         await signInWithEmailAndPassword(auth, values.email, values.password);
       }
+      console.log(`AuthForm: ${mode} successful.`);
       // The useAuth hook will handle the redirect
     } catch (error: any) {
+      console.error(`AuthForm: ${mode} failed`, error);
       toast({
         variant: "destructive",
         title: "Authentication failed",
@@ -64,11 +67,14 @@ export function AuthForm({ mode }: AuthFormProps) {
 
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
+    console.log("AuthForm: Starting Google Sign-In...");
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      console.log("AuthForm: Google Sign-In successful. UserCredential:", result);
       // The useAuth hook will handle the redirect
     } catch (error: any) {
+      console.error("AuthForm: Google Sign-In failed.", error);
       if (error.code !== 'auth/popup-closed-by-user') {
           toast({
             variant: "destructive",
@@ -77,6 +83,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           });
       }
     } finally {
+        console.log("AuthForm: Google Sign-In process finished.");
         setGoogleLoading(false);
     }
   };
