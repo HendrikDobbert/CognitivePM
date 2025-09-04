@@ -1,17 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   collection,
   query,
   where,
-  onSnapshot,
   addDoc,
   updateDoc,
   deleteDoc,
   doc,
   serverTimestamp,
   orderBy,
+  getDocs,
   type DocumentData,
 } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
@@ -22,7 +22,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -31,8 +30,18 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Trash2, ListTodo, Sparkles } from "lucide-react";
-import { NewTaskDialog } from "./new-task-dialog";
+import { Plus, Trash2, ListTodo, Sparkles, RefreshCw } from "lucide-react";
+
+const NewTaskDialog = dynamic(
+  () => import("./new-task-dialog").then((mod) => mod.NewTaskDialog),
+  {
+    ssr: false,
+    loading: () => <Button variant="outline" size="sm" disabled>
+        <Sparkles className="mr-2 h-4 w-4" />
+        Smart Create
+    </Button>,
+  }
+);
 
 
 interface Task {
@@ -46,44 +55,55 @@ export function MyTasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTaskText, setNewTaskText] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useEffect(() => {
+  const fetchTasks = useCallback(async () => {
     if (!user) {
       setLoading(false);
       return;
-    };
-
+    }
+    
     const q = query(
       collection(db, "tasks"),
       where("userId", "==", user.uid),
       orderBy("createdAt", "desc")
     );
 
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+    try {
+      const querySnapshot = await getDocs(q);
       const tasksData: Task[] = [];
       querySnapshot.forEach((doc: DocumentData) => {
         tasksData.push({ id: doc.id, ...doc.data() } as Task);
       });
       setTasks(tasksData);
-      setLoading(false);
-    }, (error) => {
-        console.error("Error fetching tasks:", error);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+    } finally {
         setLoading(false);
-    });
-
-    return () => unsubscribe();
+        setIsRefreshing(false);
+    }
   }, [user]);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchTasks();
+  }
 
   const handleAddTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newTaskText.trim() === "" || !user) return;
     try {
-      await addDoc(collection(db, "tasks"), {
+      const docRef = await addDoc(collection(db, "tasks"), {
         text: newTaskText,
         completed: false,
         userId: user.uid,
         createdAt: serverTimestamp(),
       });
+      setTasks([{id: docRef.id, text: newTaskText, completed: false}, ...tasks]);
       setNewTaskText("");
     } catch (error) {
       console.error("Error adding task: ", error);
@@ -93,15 +113,17 @@ export function MyTasks() {
   const handleToggleTask = async (id: string, completed: boolean) => {
     const taskDoc = doc(db, "tasks", id);
     await updateDoc(taskDoc, { completed: !completed });
+    setTasks(tasks.map(t => t.id === id ? {...t, completed: !completed} : t));
   };
 
   const handleDeleteTask = async (id: string) => {
     const taskDoc = doc(db, "tasks", id);
     await deleteDoc(taskDoc);
+    setTasks(tasks.filter(t => t.id !== id));
   };
 
-  const completedTasks = tasks ? tasks.filter((task) => task.completed).length : 0;
-  const pendingTasks = tasks ? tasks.length - completedTasks : 0;
+  const completedTasks = tasks.filter((task) => task.completed).length;
+  const pendingTasks = tasks.length - completedTasks;
 
   return (
     <Card className="h-full flex flex-col">
@@ -111,12 +133,17 @@ export function MyTasks() {
             <ListTodo className="h-6 w-6" />
             My Tasks
           </div>
-          <NewTaskDialog>
-             <Button variant="outline" size="sm">
-                <Sparkles className="mr-2 h-4 w-4" />
-                Smart Create
-            </Button>
-          </NewTaskDialog>
+          <div className="flex items-center gap-2">
+             <Button variant="ghost" size="icon" onClick={handleRefresh} disabled={isRefreshing || loading}>
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+             </Button>
+            <NewTaskDialog>
+               <Button variant="outline" size="sm">
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Smart Create
+              </Button>
+            </NewTaskDialog>
+          </div>
         </CardTitle>
         <CardDescription>
           You have {pendingTasks} pending and {completedTasks} completed tasks.
@@ -135,12 +162,12 @@ export function MyTasks() {
         </form>
         <ScrollArea className="flex-1 pr-4 -mr-4">
           {loading ? (
-            <div className="space-y-3">
+            <div className="space-y-3 py-4">
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
             </div>
-          ) : tasks && tasks.length > 0 ? (
+          ) : tasks.length > 0 ? (
             <div className="space-y-3">
               {tasks.map((task) => (
                 <div
@@ -174,7 +201,7 @@ export function MyTasks() {
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8">
                 <p className="font-medium">All tasks completed!</p>
-                <p className="text-sm">Add a new task to get started.</p>
+                <p className="text-sm">Add a new task to get started or click refresh.</p>
             </div>
           )}
         </ScrollArea>
