@@ -44,24 +44,16 @@ export function AuthForm({ mode }: AuthFormProps) {
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log(`AuthForm: onSubmit called for mode: ${mode}`, values);
     setLoading(true);
     try {
       if (mode === "register") {
-        console.log("AuthForm: Attempting to register...");
         const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
-        console.log("AuthForm: Registration successful in Firebase Auth.", userCredential.user);
         await createOrUpdateUser(userCredential.user);
-        console.log("AuthForm: createOrUpdateUser called for registration.");
       } else {
-        console.log("AuthForm: Attempting to sign in...");
         await signInWithEmailAndPassword(auth, values.email, values.password);
-        console.log("AuthForm: Sign-in successful.");
       }
-      // The useAuth hook will handle the redirect, so we don't need to setLoading(false) here.
-       console.log("AuthForm: Auth action completed. Waiting for useAuth to redirect.");
+      // The useAuth hook will handle the redirect, so we don't need to setLoading(false) here on success.
     } catch (error: any) {
-       console.error(`AuthForm: Auth failed in ${mode} mode.`, error);
       toast({
         variant: "destructive",
         title: "Authentication failed",
@@ -72,20 +64,15 @@ export function AuthForm({ mode }: AuthFormProps) {
   };
 
   const handleGoogleSignIn = async () => {
-    console.log("AuthForm: Starting Google Sign-In...");
     // DO NOT setLoading(true) here. It causes the component to re-render
     // and dismisses the Google sign-in popup, leading to the "popup-closed-by-user" error.
     // The global `useAuth` hook will manage the loading state after a successful sign-in.
     try {
       const provider = new GoogleAuthProvider();
       const userCredential = await signInWithPopup(auth, provider);
-      console.log("AuthForm: Google Sign-In successful in Firebase Auth.", userCredential.user);
       await createOrUpdateUser(userCredential.user);
-      console.log("AuthForm: createOrUpdateUser called for Google Sign-In.");
       // The useAuth hook will handle the redirect
-      console.log("AuthForm: Google Sign-In process finished. Waiting for useAuth to redirect.");
     } catch (error: any) {
-      console.error("AuthForm: Google Sign-In failed.", error);
       // We don't toast a "popup-closed-by-user" error as it's not a real failure.
       if (error.code !== 'auth/popup-closed-by-user') {
         toast({

@@ -6,18 +6,14 @@ import { SidebarNav } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 
 async function checkAuth() {
-  console.log("DashboardLayout checkAuth: Verifying session cookie...");
   const sessionCookie = cookies().get("session")?.value;
   if (!sessionCookie) {
-    console.log("DashboardLayout checkAuth: No session cookie found.");
     return null;
   }
   try {
     const decodedToken = await adminAuth.verifySessionCookie(sessionCookie, true);
-    console.log("DashboardLayout checkAuth: Session cookie verified successfully for UID:", decodedToken.uid);
     return decodedToken;
   } catch (error) {
-    console.error("DashboardLayout checkAuth: Session cookie verification failed:", error);
     return null;
   }
 }
@@ -27,15 +23,12 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  console.log("DashboardLayout: Rendering. Checking auth status...");
   const decodedToken = await checkAuth();
 
   if (!decodedToken) {
-    console.log("DashboardLayout: User not authenticated, redirecting to /");
     redirect("/");
   }
 
-  console.log("DashboardLayout: User is authenticated. Rendering dashboard.");
   return (
     <div className="flex min-h-screen w-full">
       <SidebarNav />
