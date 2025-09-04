@@ -16,6 +16,7 @@ import {
 } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { useAuth } from "@/hooks/use-auth";
+import dynamic from "next/dynamic";
 
 import {
   Card,
@@ -30,7 +31,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Trash2, ListTodo } from "lucide-react";
+import { Plus, Trash2, ListTodo, Sparkles } from "lucide-react";
+import { NewTaskDialog } from "./new-task-dialog";
+
 
 interface Task {
   id: string;
@@ -45,9 +48,11 @@ export function MyTasks() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    };
 
-    setLoading(true);
     const q = query(
       collection(db, "tasks"),
       where("userId", "==", user.uid),
@@ -61,6 +66,9 @@ export function MyTasks() {
       });
       setTasks(tasksData);
       setLoading(false);
+    }, (error) => {
+        console.error("Error fetching tasks:", error);
+        setLoading(false);
     });
 
     return () => unsubscribe();
@@ -92,15 +100,23 @@ export function MyTasks() {
     await deleteDoc(taskDoc);
   };
 
-  const completedTasks = tasks.filter((task) => task.completed).length;
-  const pendingTasks = tasks.length - completedTasks;
+  const completedTasks = tasks ? tasks.filter((task) => task.completed).length : 0;
+  const pendingTasks = tasks ? tasks.length - completedTasks : 0;
 
   return (
     <Card className="h-full flex flex-col">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <ListTodo className="h-6 w-6" />
-          My Tasks
+        <CardTitle className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <ListTodo className="h-6 w-6" />
+            My Tasks
+          </div>
+          <NewTaskDialog>
+             <Button variant="outline" size="sm">
+                <Sparkles className="mr-2 h-4 w-4" />
+                Smart Create
+            </Button>
+          </NewTaskDialog>
         </CardTitle>
         <CardDescription>
           You have {pendingTasks} pending and {completedTasks} completed tasks.
@@ -124,7 +140,7 @@ export function MyTasks() {
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
             </div>
-          ) : tasks.length > 0 ? (
+          ) : tasks && tasks.length > 0 ? (
             <div className="space-y-3">
               {tasks.map((task) => (
                 <div
