@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, User as UserIcon } from "lucide-react";
+import { ThemeToggle } from "./theme-toggle";
 
 export function Header() {
   const { user } = useAuth();
@@ -28,6 +29,7 @@ export function Header() {
 
   return (
     <header className="flex h-16 items-center justify-end border-b bg-card px-4 md:px-6">
+      <ThemeToggle />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-10 w-10 rounded-full">
