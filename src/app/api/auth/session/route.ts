@@ -4,9 +4,11 @@ import { cookies } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
+  console.log("API /api/auth/session POST: Received request.");
   const { idToken } = await request.json();
 
   if (!idToken) {
+    console.error("API /api/auth/session POST: idToken is missing.");
     return NextResponse.json(
       { error: "idToken is required" },
       { status: 400 }
@@ -17,6 +19,7 @@ export async function POST(request: NextRequest) {
   const expiresIn = 60 * 60 * 24 * 5 * 1000;
 
   try {
+    console.log("API /api/auth/session POST: Creating session cookie...");
     const sessionCookie = await adminAuth.createSessionCookie(idToken, {
       expiresIn,
     });
@@ -26,9 +29,10 @@ export async function POST(request: NextRequest) {
       secure: process.env.NODE_ENV === "production",
       path: "/",
     });
+    console.log("API /api/auth/session POST: Session cookie created and set successfully.");
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error creating session cookie:", error);
+    console.error("API /api/auth/session POST: Error creating session cookie:", error);
     return NextResponse.json(
       { error: "Failed to create session" },
       { status: 401 }
@@ -37,6 +41,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE() {
+  console.log("API /api/auth/session DELETE: Received request to delete cookie.");
   cookies().delete("session");
+  console.log("API /api/auth/session DELETE: Session cookie deleted.");
   return NextResponse.json({ success: true });
 }

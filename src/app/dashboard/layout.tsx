@@ -6,14 +6,18 @@ import { SidebarNav } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 
 async function checkAuth() {
+  console.log("DashboardLayout: Checking auth...");
   const sessionCookie = cookies().get("session")?.value;
   if (!sessionCookie) {
+    console.log("DashboardLayout: No session cookie found.");
     return false;
   }
   try {
     await adminAuth.verifySessionCookie(sessionCookie, true);
+    console.log("DashboardLayout: Session cookie verified successfully.");
     return true;
   } catch (error) {
+    console.error("DashboardLayout: Session cookie verification failed:", error);
     return false;
   }
 }
@@ -26,6 +30,7 @@ export default async function DashboardLayout({
   const isLoggedIn = await checkAuth();
 
   if (!isLoggedIn) {
+    console.log("DashboardLayout: User not logged in, redirecting to /");
     redirect("/");
   }
 
