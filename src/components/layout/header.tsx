@@ -3,9 +3,14 @@
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useAuth } from "@/hooks/use-auth";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,11 +20,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, User as UserIcon } from "lucide-react";
+import { LogOut, User as UserIcon, Menu, BrainCircuit } from "lucide-react";
+import { NavLinks } from "./nav-links";
 
 export function Header() {
   const { user } = useAuth();
-  const router = useRouter();
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -27,12 +32,39 @@ export function Header() {
   };
 
   return (
-    <header className="flex h-16 items-center justify-end border-b bg-card px-4 md:px-6">
+    <header className="flex h-16 items-center justify-between border-b bg-card px-4 md:px-6">
+      <div className="flex items-center gap-4">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="icon" className="md:hidden">
+              <Menu className="h-6 w-6" />
+              <span className="sr-only">Toggle navigation menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left">
+          <div className="flex h-16 items-center border-b px-6">
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-2 font-semibold"
+            >
+              <BrainCircuit className="h-6 w-6 text-primary" />
+              <span className="text-lg">CognitivePM</span>
+            </Link>
+          </div>
+            <NavLinks />
+          </SheetContent>
+        </Sheet>
+        <h1 className="hidden md:block text-lg font-semibold">Dashboard</h1>
+      </div>
+
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-10 w-10 rounded-full">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={user?.photoURL ?? `https://picsum.photos/100`} data-ai-hint="user avatar" alt="User avatar" />
+              <AvatarImage
+                src={user?.photoURL ?? `https://picsum.photos/100`}
+                alt="User avatar"
+              />
               <AvatarFallback>
                 {user?.email?.charAt(0).toUpperCase() ?? <UserIcon />}
               </AvatarFallback>

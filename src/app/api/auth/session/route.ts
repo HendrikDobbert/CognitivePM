@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     const sessionCookie = await adminAuth.createSessionCookie(idToken, {
       expiresIn,
     });
-    cookies().set("session", sessionCookie, {
+    (await cookies()).set("session", sessionCookie, {
       maxAge: expiresIn,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE() {
   try {
-    cookies().delete("session");
+    (await cookies()).delete("session");
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("API /api/auth/session DELETE: Error deleting cookie:", error);
