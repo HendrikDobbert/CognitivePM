@@ -11,12 +11,14 @@ const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
 export function getFirebaseAdminApp(): App {
   // If we're in a production-like environment with the service account, use it.
   if (serviceAccount) {
-    if (getApps().some(app => app.name === 'admin')) {
-      return getApp('admin');
+    // Use a unique app name to avoid conflicts
+    const adminAppName = 'admin-app';
+    if (getApps().some(app => app.name === adminAppName)) {
+      return getApp(adminAppName);
     }
     return initializeApp({
       credential: cert(serviceAccount)
-    }, 'admin');
+    }, adminAppName);
   }
 
   // Otherwise, use the default app initialization for local development.
