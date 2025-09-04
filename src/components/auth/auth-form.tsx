@@ -69,6 +69,10 @@ export function AuthForm({ mode }: AuthFormProps) {
       await signInWithPopup(auth, provider);
       router.push("/dashboard");
     } catch (error: any) {
+      // Don't show an error toast if the user closes the popup
+      if (error.code === 'auth/popup-closed-by-user') {
+        return;
+      }
       toast({
         variant: "destructive",
         title: "Google Sign-In failed",
