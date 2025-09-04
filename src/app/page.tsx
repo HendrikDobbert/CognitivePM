@@ -14,13 +14,16 @@ export default function AuthenticationPage() {
   const router = useRouter();
 
   useEffect(() => {
+    // Redirect to dashboard if user is logged in.
     if (user) {
       router.push("/dashboard");
     }
   }, [user, router]);
 
-  // While the auth state is loading, or if the user is found, show a spinner.
-  if (loading || user) {
+  // If the user is logged in (and therefore redirecting), show a loader.
+  // Otherwise, show the login form. This prevents the login form from "flashing"
+  // for users who are already authenticated.
+  if (user) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -28,7 +31,7 @@ export default function AuthenticationPage() {
     );
   }
   
-  // If not loading and no user is found, render the login form.
+  // Render the login form by default.
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4">
       <div className="flex items-center gap-2 mb-6">
