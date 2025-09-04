@@ -1,5 +1,5 @@
 import "server-only";
-import { initializeApp, getApps, App, cert } from "firebase-admin/app";
+import { initializeApp, getApps, App, cert, getApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 
 const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
@@ -8,8 +8,8 @@ const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
 
 // Helper function to initialize Firebase Admin App
 export function getFirebaseAdminApp(): App {
-    if (getApps().length > 0) {
-        return getApps()[0];
+    if (getApps().length) {
+        return getApp();
     }
     
     if (!serviceAccount) {

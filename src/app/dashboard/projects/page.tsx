@@ -1,26 +1,66 @@
+import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FolderKanban } from "lucide-react";
 import Link from "next/link";
+import { db } from "@/lib/firebase";
+import { cookies }s from "next/headers";
+import { adminAuth } from "@/lib/firebase-admin";
+import { CreateProjectDialog } from "@/components/dashboard/create-project-dialog";
 
-// Mock data fetching function. In a real app, this would fetch from a database.
-async function getProjects() {
-    return [
-        { id: "alpha", name: "Project Alpha", description: "Mobile app development", status: "In Progress" },
-        { id: "phoenix", name: "Project Phoenix", description: "Website redesign", status: "On Hold" },
-        { id: "neptune", name: "Project Neptune", description: "Data analytics platform", status: "Completed" },
-      ];
+interface Project {
+    id: string;
+    name: string;
+    description: string;
+    status: string;
+    [key: string]: any;
 }
 
+// Data fetching function now uses Firestore
+async function getProjects(uid: string): Promise<Project[]> {
+    if (!uid) return [];
+    const q = query(
+        collection(db, "projects"),
+        where("userId", "==", uid),
+        orderBy("createdAt", "desc")
+    );
+    
+    try {
+        const querySnapshot = await getDocs(q);
+        const projectsData: Project[] = [];
+        querySnapshot.forEach((doc) => {
+          projectsData.push({ id: doc.id, ...doc.data() } as Project);
+        });
+        return projectsData;
+    } catch (error) {
+        console.error("Error fetching projects on server:", error);
+        return [];
+    }
+}
+
+async function getUserIdFromSessionCookie() {
+  try {
+    const sessionCookie = cookies().get("session")?.value;
+    if (!sessionCookie) return null;
+    const decodedToken = await adminAuth.verifySessionCookie(sessionCookie, true);
+    return decodedToken.uid;
+  } catch (error) {
+    return null;
+  }
+}
 
 export default async function ProjectsPage() {
-  const projects = await getProjects();
+  const uid = await getUserIdFromSessionCookie();
+  const projects = await getProjects(uid || "");
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
+       <div className="flex justify-between items-center">
+         <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
+         <CreateProjectDialog />
+       </div>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {projects.map((project) => (
-          <Link href={`/dashboard/project/${project.id}`} key={project.name}>
+          <Link href={`/dashboard/project/${project.id}`} key={project.id}>
             <Card className="h-full hover:bg-muted/50 transition-colors">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -35,11 +75,14 @@ export default async function ProjectsPage() {
             </Card>
           </Link>
         ))}
-        <Card className="border-dashed flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition-colors">
-            <div className="text-center">
-                <p>+ New Project</p>
-            </div>
-        </Card>
+        {projects.length === 0 && (
+            <Card className="border-dashed flex items-center justify-center text-muted-foreground col-span-full h-64">
+                <div className="text-center">
+                    <p>You have no projects yet.</p>
+                    <p className="text-sm">Click 'New Project' to get started.</p>
+                </div>
+            </Card>
+        )}
       </div>
     </div>
   );
