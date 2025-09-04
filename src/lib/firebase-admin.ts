@@ -1,35 +1,24 @@
 
-import "server-only";
 import { initializeApp, getApps, App, cert, getApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 
-const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
-  ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
-  : undefined;
+// This is a singleton pattern to ensure we only initialize the app once.
+let app: App;
 
-// Helper function to initialize Firebase Admin App
-export function getFirebaseAdminApp(): App {
-  // If we're in a production-like environment with the service account, use it.
-  if (serviceAccount) {
-    // Use a unique app name to avoid conflicts
-    const adminAppName = 'admin-app';
-    if (getApps().some(app => app.name === adminAppName)) {
-      return getApp(adminAppName);
-    }
-    return initializeApp({
-      credential: cert(serviceAccount)
-    }, adminAppName);
+if (getApps().length === 0) {
+  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    // Production environment
+    app = initializeApp({
+      credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)),
+    });
+  } else {
+    // Development environment
+    app = initializeApp({
+      projectId: 'cognitivepm', // Replace with your actual project ID
+    });
   }
-
-  // Otherwise, use the default app initialization for local development.
-  if (getApps().length > 0) {
-    return getApp();
-  }
-
-  // This simplified initialization is suitable for local development environments
-  // where the server might not have service account credentials configured.
-  // The client-side firebase config will be implicitly used.
-  return initializeApp();
+} else {
+  app = getApp();
 }
 
-export const adminAuth = getAuth(getFirebaseAdminApp());
+export const adminAuth = getAuth(app);
