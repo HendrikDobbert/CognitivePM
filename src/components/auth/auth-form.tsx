@@ -73,7 +73,9 @@ export function AuthForm({ mode }: AuthFormProps) {
 
   const handleGoogleSignIn = async () => {
     console.log("AuthForm: Starting Google Sign-In...");
-    setLoading(true);
+    // DO NOT setLoading(true) here. It causes the component to re-render
+    // and dismisses the Google sign-in popup, leading to the "popup-closed-by-user" error.
+    // The global `useAuth` hook will manage the loading state after a successful sign-in.
     try {
       const provider = new GoogleAuthProvider();
       const userCredential = await signInWithPopup(auth, provider);
@@ -84,6 +86,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       console.log("AuthForm: Google Sign-In process finished. Waiting for useAuth to redirect.");
     } catch (error: any) {
       console.error("AuthForm: Google Sign-In failed.", error);
+      // We don't toast a "popup-closed-by-user" error as it's not a real failure.
       if (error.code !== 'auth/popup-closed-by-user') {
         toast({
           variant: "destructive",
@@ -91,7 +94,6 @@ export function AuthForm({ mode }: AuthFormProps) {
           description: error.message,
         });
       }
-      setLoading(false); // Only set loading to false on error
     }
   };
 
@@ -121,11 +123,8 @@ export function AuthForm({ mode }: AuthFormProps) {
           <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
         </div>
       </div>
-      <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={loading}>
-        {loading ? (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        ) : (
-          <svg className="mr-2 h-4 w-4" viewBox="0 0 48 48">
+      <Button variant="outline" className="w-full" onClick={handleGoogleSignIn}>
+        <svg className="mr-2 h-4 w-4" viewBox="0 0 48 48">
             <path
               fill="#FFC107"
               d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"
@@ -143,7 +142,6 @@ export function AuthForm({ mode }: AuthFormProps) {
               d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571l6.19,5.238C43.021,36.251,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"
             ></path>
           </svg>
-        )}
         Google
       </Button>
     </div>
