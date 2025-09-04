@@ -6,7 +6,7 @@ import { SidebarNav } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 
 async function checkAuth() {
-  const sessionCookie = cookies().get("session")?.value;
+  const sessionCookie = (await cookies()).get("session")?.value;
   if (!sessionCookie) {
     return null;
   }

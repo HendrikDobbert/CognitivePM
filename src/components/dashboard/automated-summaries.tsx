@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Card,
   CardContent,
@@ -7,8 +9,38 @@ import {
 } from "@/components/ui/card";
 import { FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useEffect, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+
+interface Summary {
+  projectName: string;
+  summary: string;
+}
 
 export function AutomatedSummaries() {
+  const [summaries, setSummaries] = useState<Summary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchSummaries() {
+      try {
+        const response = await fetch("/api/summaries");
+        if (!response.ok) {
+          throw new Error("Failed to fetch summaries");
+        }
+        const data = await response.json();
+        setSummaries(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An unknown error occurred");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchSummaries();
+  }, []);
+
   return (
     <Card>
       <CardHeader>
@@ -16,27 +48,39 @@ export function AutomatedSummaries() {
           <FileText className="h-6 w-6 text-primary" />
           Automated Summaries
         </CardTitle>
-        <CardDescription>Your daily project briefing</CardDescription>
+        <CardDescription>
+          AI-powered summaries of your projects, updated in real-time.
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div>
-            <div className="flex justify-between items-center mb-1">
-                <h4 className="font-semibold">Project Alpha</h4>
-                <Badge variant="outline">Updated 2h ago</Badge>
+        {loading ? (
+          <>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-1/4" />
+              <Skeleton className="h-8 w-full" />
             </div>
-            <p className="text-sm text-muted-foreground">
-            The design team has completed the new mockups. Development is blocked on API integration, which is currently 2 days behind schedule.
-            </p>
-        </div>
-        <div>
-            <div className="flex justify-between items-center mb-1">
-                <h4 className="font-semibold">Project Phoenix</h4>
-                 <Badge variant="outline">Updated 8h ago</Badge>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-1/3" />
+              <Skeleton className="h-8 w-full" />
             </div>
-            <p className="text-sm text-muted-foreground">
-            Successful deployment of v1.2 to staging. User feedback is positive. Next focus is on performance optimization.
-            </p>
-        </div>
+          </>
+        ) : error ? (
+          <p className="text-sm text-destructive">{error}</p>
+        ) : summaries.length > 0 ? (
+          summaries.map((s, index) => (
+            <div key={index}>
+              <div className="flex justify-between items-center mb-1">
+                <h4 className="font-semibold">{s.projectName}</h4>
+                <Badge variant="outline">Updated now</Badge>
+              </div>
+              <p className="text-sm text-muted-foreground">{s.summary}</p>
+            </div>
+          ))
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            No project summaries available. Add tasks to your projects to see summaries here.
+          </p>
+        )}
       </CardContent>
     </Card>
   );

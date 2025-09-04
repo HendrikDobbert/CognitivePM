@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { FolderKanban } from "lucide-react";
 import Link from "next/link";
 import { db } from "@/lib/firebase";
-import { cookies }s from "next/headers";
+import { cookies } from "next/headers";
 import { adminAuth } from "@/lib/firebase-admin";
 import { CreateProjectDialog } from "@/components/dashboard/create-project-dialog";
 
@@ -39,7 +39,7 @@ async function getProjects(uid: string): Promise<Project[]> {
 
 async function getUserIdFromSessionCookie() {
   try {
-    const sessionCookie = cookies().get("session")?.value;
+    const sessionCookie = (await cookies()).get("session")?.value;
     if (!sessionCookie) return null;
     const decodedToken = await adminAuth.verifySessionCookie(sessionCookie, true);
     return decodedToken.uid;
@@ -79,7 +79,7 @@ export default async function ProjectsPage() {
             <Card className="border-dashed flex items-center justify-center text-muted-foreground col-span-full h-64">
                 <div className="text-center">
                     <p>You have no projects yet.</p>
-                    <p className="text-sm">Click 'New Project' to get started.</p>
+                    <p className="text-sm">Click &apos;New Project&apos; to get started.</p>
                 </div>
             </Card>
         )}

@@ -45,7 +45,7 @@ async function getTasksForUser(uid: string): Promise<Task[]> {
 
 async function getUserIdFromSessionCookie() {
   try {
-    const sessionCookie = cookies().get("session")?.value;
+    const sessionCookie = (await cookies()).get("session")?.value;
     if (!sessionCookie) return null;
     const decodedToken = await adminAuth.verifySessionCookie(sessionCookie, true);
     return decodedToken.uid;

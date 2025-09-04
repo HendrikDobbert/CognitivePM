@@ -63,7 +63,7 @@ export function ProjectBrain() {
           Project Brain
         </CardTitle>
         <CardDescription>
-          Ask me anything about your projects. I'll provide answers based on the latest data.
+          Ask me anything about your projects. I&apos;ll provide answers based on the latest data.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
@@ -72,7 +72,7 @@ export function ProjectBrain() {
             {messages.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground p-8">
                     <p className="font-medium">Welcome to your Project Brain.</p>
-                    <p className="text-sm">Ask a question to get started, e.g., "What is the status of Project Alpha?"</p>
+                    <p className="text-sm">Ask a question to get started, e.g., &quot;What is the status of Project Alpha?&quot;</p>
                 </div>
             )}
             {messages.map((message, index) => (

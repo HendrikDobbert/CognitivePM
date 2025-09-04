@@ -33,7 +33,7 @@ async function getProjectDetails(id: string): Promise<ProjectDetails | null> {
       ];
 
       return {
-        ...(projectDoc.data() as Omit<ProjectDetails, "tasks">),
+        ...(projectDoc.data() as ProjectDetails),
         tasks: mockTasks,
       };
     } else {
