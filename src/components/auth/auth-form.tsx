@@ -28,7 +28,6 @@ type AuthFormProps = {
 
 export function AuthForm({ mode }: AuthFormProps) {
   const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
 
   const {
     register,
@@ -44,17 +43,14 @@ export function AuthForm({ mode }: AuthFormProps) {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setLoading(true);
-    console.log(`AuthForm: Submitting ${mode} form...`);
     try {
       if (mode === "register") {
         await createUserWithEmailAndPassword(auth, values.email, values.password);
       } else {
         await signInWithEmailAndPassword(auth, values.email, values.password);
       }
-      console.log(`AuthForm: ${mode} successful.`);
       // The useAuth hook will handle the redirect
     } catch (error: any) {
-      console.error(`AuthForm: ${mode} failed`, error);
       toast({
         variant: "destructive",
         title: "Authentication failed",
@@ -66,15 +62,13 @@ export function AuthForm({ mode }: AuthFormProps) {
   };
 
   const handleGoogleSignIn = async () => {
-    setGoogleLoading(true);
-    console.log("AuthForm: Starting Google Sign-In...");
+    setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      console.log("AuthForm: Google Sign-In successful. UserCredential:", result);
+      await signInWithPopup(auth, provider);
       // The useAuth hook will handle the redirect
     } catch (error: any) {
-      console.error("AuthForm: Google Sign-In failed.", error);
+      // Don't show a toast if the user closes the popup
       if (error.code !== 'auth/popup-closed-by-user') {
           toast({
             variant: "destructive",
@@ -83,27 +77,24 @@ export function AuthForm({ mode }: AuthFormProps) {
           });
       }
     } finally {
-        console.log("AuthForm: Google Sign-In process finished.");
-        setGoogleLoading(false);
+        setLoading(false);
     }
   };
-
-  const isFormLoading = loading || googleLoading;
 
   return (
     <div className="space-y-4 mt-4">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" placeholder="m@example.com" {...register("email")} disabled={isFormLoading} />
+          <Input id="email" type="email" placeholder="m@example.com" {...register("email")} disabled={loading} />
           {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
         </div>
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>
-          <Input id="password" type="password" {...register("password")} disabled={isFormLoading} />
+          <Input id="password" type="password" {...register("password")} disabled={loading} />
           {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
         </div>
-        <Button type="submit" className="w-full" disabled={isFormLoading}>
+        <Button type="submit" className="w-full" disabled={loading}>
           {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {mode === "register" ? "Create an account" : "Sign In"}
         </Button>
@@ -116,8 +107,8 @@ export function AuthForm({ mode }: AuthFormProps) {
           <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
         </div>
       </div>
-      <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isFormLoading}>
-        {googleLoading ? (
+      <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={loading}>
+        {loading ? (
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         ) : (
           <svg className="mr-2 h-4 w-4" viewBox="0 0 48 48">

@@ -23,7 +23,7 @@ export default function AuthenticationPage() {
   // If the user is logged in (and therefore redirecting), show a loader.
   // Otherwise, show the login form. This prevents the login form from "flashing"
   // for users who are already authenticated.
-  if (user) {
+  if (loading || user) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
