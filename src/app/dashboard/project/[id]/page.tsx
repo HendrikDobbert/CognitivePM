@@ -5,6 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { GanttChart } from "@/components/dashboard/gantt-chart";
 import { GanttChartSquare, ListTodo } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { doc, getDoc, type DocumentData } from "firebase/firestore";
@@ -87,11 +88,7 @@ export default async function ProjectDetailPage({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-center h-64 border-2 border-dashed rounded-lg bg-muted/50">
-                <p className="text-muted-foreground">
-                  [Gantt Chart Placeholder]
-                </p>
-              </div>
+              <GanttChart />
             </CardContent>
           </Card>
         </div>
