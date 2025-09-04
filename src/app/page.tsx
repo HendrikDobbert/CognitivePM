@@ -11,17 +11,10 @@ import { useEffect } from "react";
 
 export default function AuthenticationPage() {
   const { user, loading } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    // Redirect to dashboard if user is logged in.
-    if (user) {
-      router.push("/dashboard");
-    }
-  }, [user, router]);
-
-  // If the user is being checked or is already logged in (and therefore redirecting), 
-  // show a loader. This prevents the login form from "flashing" for authenticated users.
+  
+  // If the initial auth check is running, or if the user is logged in
+  // (and is about to be redirected by the useAuth hook), show a loader.
+  // This prevents the login form from flashing for already authenticated users.
   if (loading || user) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
