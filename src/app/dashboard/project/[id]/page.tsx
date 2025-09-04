@@ -2,17 +2,34 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { GanttChartSquare, ListTodo } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-export default function ProjectDetailPage({ params }: { params: { id: string } }) {
-  const tasks = [
-    { id: 1, text: "Design homepage mockups", completed: true },
-    { id: 2, text: "Develop authentication API", completed: true },
-    { id: 3, text: "Integrate payment gateway", completed: false },
-    { id: 4, text: "Setup deployment pipeline", completed: false },
-  ];
+// Mock data fetching. In a real app, this would fetch from a database based on the id.
+async function getProjectDetails(id: string) {
+    const projects: any = {
+        alpha: { name: "Project Alpha", tasks: [
+            { id: 1, text: "Design homepage mockups", completed: true },
+            { id: 2, text: "Develop authentication API", completed: true },
+            { id: 3, text: "Integrate payment gateway", completed: false },
+            { id: 4, text: "Setup deployment pipeline", completed: false },
+        ]},
+        phoenix: { name: "Project Phoenix", tasks: [
+            { id: 1, text: "Deploy v1.2 to staging", completed: true },
+            { id: 2, text: "Plan performance optimization", completed: false },
+        ]},
+        neptune: { name: "Project Neptune", tasks: [
+            { id: 1, text: "Finalize data model", completed: true },
+            { id: 2, text: "Publish final report", completed: true },
+        ]}
+    };
+    return projects[id] || { name: "Project not found", tasks: [] };
+}
+
+
+export default async function ProjectDetailPage({ params }: { params: { id: string } }) {
+  const project = await getProjectDetails(params.id);
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Project Alpha</h1>
+      <h1 className="text-3xl font-bold tracking-tight">{project.name}</h1>
       <p className="text-muted-foreground">Detailed view for project ID: {params.id}</p>
       
       <div className="grid gap-6 lg:grid-cols-3">
@@ -44,7 +61,7 @@ export default function ProjectDetailPage({ params }: { params: { id: string } }
             </CardHeader>
             <CardContent>
               <ul className="space-y-2">
-                {tasks.map(task => (
+                {project.tasks.map((task: any) => (
                   <li key={task.id} className="flex justify-between items-center">
                     <span className={task.completed ? "line-through text-muted-foreground" : ""}>
                       {task.text}
