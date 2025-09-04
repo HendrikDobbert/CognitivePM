@@ -19,6 +19,8 @@ export default function AuthenticationPage() {
     }
   }, [user, loading, router]);
 
+  // Only show a loading spinner if we are in a loading state AND a user is already found.
+  // This prevents the flicker on the initial load for non-authenticated users.
   if (loading || user) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
@@ -27,6 +29,7 @@ export default function AuthenticationPage() {
     );
   }
 
+  // Render the login form immediately by default.
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4">
       <div className="flex items-center gap-2 mb-6">
