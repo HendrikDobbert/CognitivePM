@@ -6,19 +6,19 @@ import { SidebarNav } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 
 async function checkAuth() {
-  console.log("DashboardLayout: Checking auth...");
+  console.log("DashboardLayout checkAuth: Verifying session cookie...");
   const sessionCookie = cookies().get("session")?.value;
   if (!sessionCookie) {
-    console.log("DashboardLayout: No session cookie found.");
-    return false;
+    console.log("DashboardLayout checkAuth: No session cookie found.");
+    return null;
   }
   try {
-    await adminAuth.verifySessionCookie(sessionCookie, true);
-    console.log("DashboardLayout: Session cookie verified successfully.");
-    return true;
+    const decodedToken = await adminAuth.verifySessionCookie(sessionCookie, true);
+    console.log("DashboardLayout checkAuth: Session cookie verified successfully for UID:", decodedToken.uid);
+    return decodedToken;
   } catch (error) {
-    console.error("DashboardLayout: Session cookie verification failed:", error);
-    return false;
+    console.error("DashboardLayout checkAuth: Session cookie verification failed:", error);
+    return null;
   }
 }
 
@@ -27,13 +27,15 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const isLoggedIn = await checkAuth();
+  console.log("DashboardLayout: Rendering. Checking auth status...");
+  const decodedToken = await checkAuth();
 
-  if (!isLoggedIn) {
-    console.log("DashboardLayout: User not logged in, redirecting to /");
+  if (!decodedToken) {
+    console.log("DashboardLayout: User not authenticated, redirecting to /");
     redirect("/");
   }
 
+  console.log("DashboardLayout: User is authenticated. Rendering dashboard.");
   return (
     <div className="flex min-h-screen w-full">
       <SidebarNav />

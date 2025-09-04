@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
 
 
   if (!idToken) {
-    console.error("API /api/auth/session POST: idToken is missing from request body.", body);
+    console.error("API /api/auth/session POST: idToken is missing from request body.");
     return NextResponse.json(
       { error: "idToken is required" },
       { status: 400 }
@@ -19,21 +19,21 @@ export async function POST(request: NextRequest) {
 
   // Set session expiration to 5 days.
   const expiresIn = 60 * 60 * 24 * 5 * 1000;
-  console.log("API /api/auth/session POST: idToken received, length:", idToken.length);
+  console.log("API /api/auth/session POST: idToken received, attempting to create session cookie.");
 
 
   try {
-    console.log("API /api/auth/session POST: Creating session cookie...");
     const sessionCookie = await adminAuth.createSessionCookie(idToken, {
       expiresIn,
     });
+    console.log("API /api/auth/session POST: Session cookie created successfully. Setting it in response cookies.");
     cookies().set("session", sessionCookie, {
       maxAge: expiresIn,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       path: "/",
     });
-    console.log("API /api/auth/session POST: Session cookie created and set successfully.");
+    console.log("API /api/auth/session POST: Session cookie set successfully.");
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("API /api/auth/session POST: Error creating session cookie:", error);
