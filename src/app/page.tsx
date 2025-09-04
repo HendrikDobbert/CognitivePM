@@ -20,9 +20,8 @@ export default function AuthenticationPage() {
     }
   }, [user, router]);
 
-  // If the user is logged in (and therefore redirecting), show a loader.
-  // Otherwise, show the login form. This prevents the login form from "flashing"
-  // for users who are already authenticated.
+  // If the user is being checked or is already logged in (and therefore redirecting), 
+  // show a loader. This prevents the login form from "flashing" for authenticated users.
   if (loading || user) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
@@ -31,7 +30,7 @@ export default function AuthenticationPage() {
     );
   }
   
-  // Render the login form by default.
+  // Render the login form by default if not loading and no user is found.
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4">
       <div className="flex items-center gap-2 mb-6">
